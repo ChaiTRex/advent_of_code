@@ -1,0 +1,5 @@
+# Ignore copyrighted problem inputs
+**/day*.txt
+
+# Ignore Rust build artifacts.
+**/target/
