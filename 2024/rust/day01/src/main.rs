@@ -1,5 +1,3 @@
-static TIMING: bool = false;
-
 fn main() {
     static INPUT: &str = include_str!("../../../day01.txt");
 
@@ -28,12 +26,6 @@ fn main() {
         .map(|(left, right)| left.abs_diff(right))
         .sum::<u32>();
 
-    if TIMING {
-        core::hint::black_box(part1);
-    } else {
-        println!("{part1}");
-    }
-
     let mut part2 = 0;
 
     let mut left = left.into_iter().peekable();
@@ -56,11 +48,6 @@ fn main() {
         }
     }
 
-    if TIMING {
-        core::hint::black_box(part2);
-        let end = std::time::Instant::now();
-        println!("{:?}", end - start);
-    } else {
-        println!("{part2}");
-    }
+    let time = start.elapsed();
+    println!("Part 1: {part1}\nPart 2: {part2}\nTime taken: {time:?}",);
 }
