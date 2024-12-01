@@ -31,20 +31,32 @@ fn main() {
     let mut left = left.into_iter().peekable();
     let mut right = right.into_iter().peekable();
 
-    while let Some(l) = left.next() {
+    'left_loop: while let Some(l) = left.next() {
         let mut left_product = l;
-        while left.peek().copied() == Some(l) {
+        while left.peek() == Some(&l) {
             left.next();
             left_product += l;
         }
 
-        while right.peek().copied().map_or(false, |r| r < l) {
-            right.next();
+        loop {
+            match right.peek() {
+                Some(&r) if r < l => {
+                    right.next();
+                }
+                Some(_) => break,
+                None => break 'left_loop,
+            }
         }
 
-        while right.peek().copied().map_or(false, |r| r == l) {
-            right.next();
-            part2 += left_product;
+        loop {
+            match right.peek() {
+                Some(&r) if r == l => {
+                    right.next();
+                    part2 += left_product;
+                }
+                Some(_) => break,
+                None => break 'left_loop,
+            }
         }
     }
 
