@@ -1,6 +1,8 @@
 fn main() {
     static INPUT: &str = include_str!("../../../day02.txt");
 
+    let start = std::time::Instant::now();
+
     let inputs = INPUT
         .lines()
         .map(|line| {
@@ -28,7 +30,6 @@ fn main() {
             part1 += 1;
         }
     }
-    println!("{part1}");
 
     let mut part2 = 0;
     'outer: for input in &inputs {
@@ -54,5 +55,7 @@ fn main() {
             }
         }
     }
-    println!("{part2}");
+
+    let time = start.elapsed();
+    println!("Part 1: {part1}\nPart 2: {part2}\nTime taken: {time:?}",);
 }
