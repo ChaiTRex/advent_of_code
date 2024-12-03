@@ -1,8 +1,9 @@
 fn main() {
     static INPUT: &str = include_str!("../../../day03.txt");
 
-    let mut part1 = 0;
-    part1 = INPUT
+    let start = std::time::Instant::now();
+
+    let part1 = INPUT
         .split("mul(")
         .map(|thingy| {
             let (a, rest) = thingy.split_once(',')?;
@@ -13,8 +14,6 @@ fn main() {
         })
         .flatten()
         .sum::<u32>();
-
-    println!("{part1}");
 
     let part2 = INPUT
         .split("do()")
@@ -32,5 +31,7 @@ fn main() {
                 .sum::<u32>()
         })
         .sum::<u32>();
-    println!("{part2}");
+
+    let time = start.elapsed();
+    println!("Part 1: {part1}\nPart 2: {part2}\nTime taken: {time:?}",);
 }
