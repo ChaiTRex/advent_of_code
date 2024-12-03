@@ -3,99 +3,97 @@ fn main() {
 
     let start = std::time::Instant::now();
 
+    macro_rules! parse {
+        ($iter:ident: $($ch:literal => $block:tt),*) => {
+            match $iter.next() {
+                $(
+                    Some($ch) => $block
+                ),*
+                Some(_) => continue,
+                None => break,
+            }
+        };
+    }
+
     let mut part1 = 0;
     let mut part2 = 0;
     let mut on = true;
     let mut iter = INPUT.bytes();
 
     'outer: loop {
-        match iter.next() {
-            None => break,
-            Some(b'd') => match iter.next() {
-                None => break,
-                Some(b'o') => match iter.next() {
-                    None => break,
-                    Some(b'(') => match iter.next() {
-                        None => break,
-                        Some(b')') => on = true,
-                        _ => (),
-                    },
-                    Some(b'n') => match iter.next() {
-                        None => break,
-                        Some(b'\'') => match iter.next() {
-                            None => break,
-                            Some(b't') => match iter.next() {
-                                None => break,
-                                Some(b'(') => match iter.next() {
-                                    None => break,
-                                    Some(b')') => on = false,
-                                    _ => (),
-                                },
-                                _ => (),
-                            },
-                            _ => (),
+        parse!(iter:
+            b'd' => {
+                parse!(iter: b'o' => {
+                    parse!(iter:
+                        b'(' => {
+                            parse!(iter: b')' => {
+                                on = true;
+                            })
                         },
-                        _ => (),
-                    },
-                    _ => (),
-                },
-                _ => (),
+                        b'n' => {
+                            parse!(iter: b'\'' => {
+                                parse!(iter: b't' => {
+                                    parse!(iter: b'(' => {
+                                        parse!(iter: b')' =>  {
+                                            on = false;
+                                        })
+                                    })
+                                })
+                            })
+                        }
+                    )
+                })
             },
-            Some(b'm') => match iter.next() {
-                None => break,
-                Some(b'u') => match iter.next() {
-                    None => break,
-                    Some(b'l') => match iter.next() {
-                        None => break,
-                        Some(b'(') => match iter.next() {
-                            None => break,
-                            Some(ch @ b'0'..=b'9') => {
-                                let mut a = (ch - b'0') as u32;
-                                loop {
-                                    match iter.next() {
-                                        None => break 'outer,
-                                        Some(ch @ b'0'..=b'9') => {
-                                            a = 10 * a + (ch - b'0') as u32;
+            b'm' => {
+                parse!(iter: b'u' => {
+                    parse!(iter: b'l' => {
+                        parse!(iter: b'(' => {
+                            match iter.next() {
+                                Some(ch @ b'0'..=b'9') => {
+                                    let mut a = (ch - b'0') as u32;
+                                    loop {
+                                        match iter.next() {
+                                            Some(ch @ b'0'..=b'9') => {
+                                                a = 10 * a + (ch - b'0') as u32;
+                                            }
+                                            Some(b',') => break,
+                                            Some(_) => continue 'outer,
+                                            None => break 'outer,
                                         }
-                                        Some(b',') => break,
-                                        _ => continue 'outer,
                                     }
-                                }
-                                match iter.next() {
-                                    None => break,
-                                    Some(ch @ b'0'..=b'9') => {
-                                        let mut b = (ch - b'0') as u32;
-                                        loop {
-                                            match iter.next() {
-                                                None => break 'outer,
-                                                Some(ch @ b'0'..=b'9') => {
-                                                    b = 10 * b + (ch - b'0') as u32;
-                                                }
-                                                Some(b')') => {
-                                                    let product = a * b;
-                                                    part1 += product;
-                                                    if on {
-                                                        part2 += product;
+                                    match iter.next() {
+                                        Some(ch @ b'0'..=b'9') => {
+                                            let mut b = (ch - b'0') as u32;
+                                            loop {
+                                                match iter.next() {
+                                                    Some(ch @ b'0'..=b'9') => {
+                                                        b = 10 * b + (ch - b'0') as u32;
                                                     }
-                                                    break;
+                                                    Some(b')') => {
+                                                        let product = a * b;
+                                                        part1 += product;
+                                                        if on {
+                                                            part2 += product;
+                                                        }
+                                                        break;
+                                                    }
+                                                    Some(_) => continue 'outer,
+                                                    None => break 'outer,
                                                 }
-                                                _ => continue 'outer,
                                             }
                                         }
+                                        Some(_) => continue,
+                                        None => break,
                                     }
-                                    _ => (),
                                 }
+                                Some(_) => continue,
+                                None => break,
                             }
-                            _ => (),
-                        },
-                        _ => (),
-                    },
-                    _ => (),
-                },
-                _ => (),
-            },
-            _ => (),
-        }
+                        })
+                    })
+                })
+            }
+        );
     }
 
     let time = start.elapsed();
