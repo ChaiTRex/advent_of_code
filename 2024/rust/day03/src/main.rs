@@ -5,11 +5,16 @@ fn main() {
 
     macro_rules! parse {
         ($iter:ident: $($ch:literal => $block:tt),*) => {
-            match $iter.next() {
+            match $iter.peek().copied() {
                 $(
-                    Some($ch) => $block
+                    Some($ch) => {
+                        $iter.next();
+                        $block
+                    }
                 ),*
-                Some(_) => continue,
+                Some(_) => {
+                    continue;
+                }
                 None => break,
             }
         };
@@ -17,15 +22,20 @@ fn main() {
 
     macro_rules! parse_number {
         ($outer:lifetime $iter:ident $result:ident: $terminator:expr => $block:tt) => {
-            match $iter.next() {
+            match $iter.peek().copied() {
                 Some(ch @ b'0'..=b'9') => {
+                    $iter.next();
                     let mut $result = (ch - b'0') as u32;
                     loop {
-                        match $iter.next() {
+                        match $iter.peek().copied() {
                             Some(ch @ b'0'..=b'9') => {
+                                $iter.next();
                                 $result = 10 * $result + (ch - b'0') as u32;
                             }
-                            Some($terminator) => break,
+                            Some($terminator) => {
+                                $iter.next();
+                                break;
+                            }
                             Some(_) => continue $outer,
                             None => break $outer,
                         }
@@ -41,11 +51,11 @@ fn main() {
     let mut part1 = 0;
     let mut part2 = 0;
     let mut on = true;
-    let mut iter = INPUT.bytes();
+    let mut iter = INPUT.bytes().peekable();
 
     'outer: loop {
-        parse!(iter:
-            b'd' => {
+        match iter.next() {
+            Some(b'd') => {
                 parse!(iter: b'o' => {
                     parse!(iter:
                         b'(' => {
@@ -66,8 +76,8 @@ fn main() {
                         }
                     )
                 })
-            },
-            b'm' => {
+            }
+            Some(b'm') => {
                 parse!(iter: b'u' => {
                     parse!(iter: b'l' => {
                         parse!(iter: b'(' => {
@@ -85,7 +95,9 @@ fn main() {
                     })
                 })
             }
-        );
+            Some(_) => continue,
+            None => break,
+        }
     }
 
     let time = start.elapsed();
