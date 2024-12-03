@@ -15,6 +15,29 @@ fn main() {
         };
     }
 
+    macro_rules! parse_number {
+        ($outer:lifetime $iter:ident $result:ident: $terminator:expr => $block:tt) => {
+            match $iter.next() {
+                Some(ch @ b'0'..=b'9') => {
+                    let mut $result = (ch - b'0') as u32;
+                    loop {
+                        match $iter.next() {
+                            Some(ch @ b'0'..=b'9') => {
+                                $result = 10 * $result + (ch - b'0') as u32;
+                            }
+                            Some($terminator) => break,
+                            Some(_) => continue $outer,
+                            None => break $outer,
+                        }
+                    }
+                    $block
+                }
+                Some(_) => continue $outer,
+                None => break $outer,
+            }
+        };
+    }
+
     let mut part1 = 0;
     let mut part2 = 0;
     let mut on = true;
@@ -48,47 +71,16 @@ fn main() {
                 parse!(iter: b'u' => {
                     parse!(iter: b'l' => {
                         parse!(iter: b'(' => {
-                            match iter.next() {
-                                Some(ch @ b'0'..=b'9') => {
-                                    let mut a = (ch - b'0') as u32;
-                                    loop {
-                                        match iter.next() {
-                                            Some(ch @ b'0'..=b'9') => {
-                                                a = 10 * a + (ch - b'0') as u32;
-                                            }
-                                            Some(b',') => break,
-                                            Some(_) => continue 'outer,
-                                            None => break 'outer,
-                                        }
+                            parse_number!('outer iter a: b',' => {
+                                parse_number!('outer iter b: b')' => {
+                                    let product = a * b;
+                                    part1 += product;
+                                    if on {
+                                        part2 += product;
                                     }
-                                    match iter.next() {
-                                        Some(ch @ b'0'..=b'9') => {
-                                            let mut b = (ch - b'0') as u32;
-                                            loop {
-                                                match iter.next() {
-                                                    Some(ch @ b'0'..=b'9') => {
-                                                        b = 10 * b + (ch - b'0') as u32;
-                                                    }
-                                                    Some(b')') => {
-                                                        let product = a * b;
-                                                        part1 += product;
-                                                        if on {
-                                                            part2 += product;
-                                                        }
-                                                        break;
-                                                    }
-                                                    Some(_) => continue 'outer,
-                                                    None => break 'outer,
-                                                }
-                                            }
-                                        }
-                                        Some(_) => continue,
-                                        None => break,
-                                    }
-                                }
-                                Some(_) => continue,
-                                None => break,
-                            }
+                                    continue 'outer;
+                                })
+                            })
                         })
                     })
                 })
