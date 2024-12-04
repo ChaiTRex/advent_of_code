@@ -30,15 +30,13 @@ fn main() {
                         const I_1: isize = $neighbor_offset;
                         const I_2: isize = I_1 + $neighbor_offset;
                         const I_3: isize = I_2 + $neighbor_offset;
-                        if ($input[i] == b'X'
-                            && $input[i.wrapping_add_signed(I_1)] == b'M'
-                            && $input[i.wrapping_add_signed(I_2)] == b'A'
-                            && $input[i.wrapping_add_signed(I_3)] == b'S')
-                            || ($input[i.wrapping_add_signed(I_3)] == b'X'
-                                && $input[i.wrapping_add_signed(I_2)] == b'M'
-                                && $input[i.wrapping_add_signed(I_1)] == b'A'
-                                && $input[i] == b'S')
-                        {
+                        let xs = [
+                            $input[i],
+                            $input[i.wrapping_add_signed(I_1)],
+                            $input[i.wrapping_add_signed(I_2)],
+                            $input[i.wrapping_add_signed(I_3)],
+                        ];
+                        if xs == *b"SAMX" || xs == *b"XMAS" {
                             $counter += 1;
                         }
                     }
@@ -59,13 +57,16 @@ fn main() {
     for y in (LINE_WIDTH..LINE_WIDTH * (HEIGHT - 1)).step_by(LINE_WIDTH) {
         for x in 1..WIDTH - 1 {
             let i = x + y;
-            if INPUT[i] == b'A'
-                && ((INPUT[i - LINE_WIDTH - 1] == b'M' && INPUT[i + LINE_WIDTH + 1] == b'S')
-                    || (INPUT[i + LINE_WIDTH + 1] == b'M' && INPUT[i - LINE_WIDTH - 1] == b'S'))
-                && ((INPUT[i - LINE_WIDTH + 1] == b'M' && INPUT[i + LINE_WIDTH - 1] == b'S')
-                    || (INPUT[i + LINE_WIDTH - 1] == b'M' && INPUT[i - LINE_WIDTH + 1] == b'S'))
-            {
-                part2 += 1;
+            if INPUT[i] == b'A' {
+                let xs = [
+                    INPUT[i - LINE_WIDTH - 1],
+                    INPUT[i - LINE_WIDTH + 1],
+                    INPUT[i + LINE_WIDTH - 1],
+                    INPUT[i + LINE_WIDTH + 1],
+                ];
+                if xs == *b"MMSS" || xs == *b"MSMS" || xs == *b"SMSM" || xs == *b"SSMM" {
+                    part2 += 1;
+                }
             }
         }
     }
