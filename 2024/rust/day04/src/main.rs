@@ -1,6 +1,8 @@
 fn main() {
     static INPUT: &str = include_str!("../../../day04.txt");
 
+    let start = std::time::Instant::now();
+
     let input = INPUT
         .lines()
         .map(|line| line.bytes().collect::<Vec<_>>())
@@ -82,8 +84,6 @@ fn main() {
         }
     }
 
-    println!("{part1}");
-
     let mut part2 = 0;
     for x in 0..width - 2 {
         for y in 0..height - 2 {
@@ -100,5 +100,7 @@ fn main() {
             }
         }
     }
-    println!("{part2}");
+
+    let time = start.elapsed();
+    println!("Part 1: {part1}\nPart 2: {part2}\nTime taken: {time:?}",);
 }
