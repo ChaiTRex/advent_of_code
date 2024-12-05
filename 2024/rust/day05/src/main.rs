@@ -1,73 +1,64 @@
+macro_rules! parse_two_digits {
+    ($tens:expr, $ones:expr) => {
+        10 * ($tens - b'0') + $ones - b'0'
+    };
+}
+
 fn main() {
-    static INPUT: &str = include_str!("../../../day05.txt");
+    static INPUT: &[u8] = include_bytes!("../../../day05.txt");
 
     let start = std::time::Instant::now();
 
-    let (rules, candidates) = INPUT.split_once("\n\n").unwrap();
-    let rules = rules
-        .lines()
-        .map(|rule| {
-            let (lower, higher) = rule.split_once('|').unwrap();
-            let lower = lower.parse::<u32>().unwrap();
-            let higher = higher.parse::<u32>().unwrap();
-            move |a: u32, b: u32| !(b == lower && a == higher)
-        })
-        .collect::<Vec<_>>();
-    let candidates = candidates
-        .lines()
-        .map(|line| {
-            line.split(',')
-                .map(|n| n.parse::<u32>().unwrap())
-                .collect::<Vec<_>>()
-        })
-        .collect::<Vec<_>>();
-    let winners = candidates.iter().filter(|candidate| {
-        for i in 0..candidate.len() - 1 {
-            for j in i + 1..candidate.len() {
-                for rule in &rules {
-                    if !rule(candidate[i], candidate[j]) {
-                        return false;
-                    }
-                }
-            }
-        }
-        true
-    });
+    let mut violations = Vec::new();
+    let mut i = 0;
+    while INPUT[i] != b'\n' {
+        violations.push((
+            parse_two_digits!(INPUT[i + 3], INPUT[i + 4]),
+            parse_two_digits!(INPUT[i], INPUT[i + 1]),
+        ));
+        i += 6;
+    }
+    i += 1;
+    violations.sort_unstable();
 
     let mut part1 = 0;
-    for winner in winners {
-        part1 += winner[winner.len() / 2];
-    }
-
     let mut part2 = 0;
-    let losers = candidates
-        .into_iter()
-        .filter(|candidate| {
-            for i in 0..candidate.len() - 1 {
-                for j in i + 1..candidate.len() {
-                    for rule in &rules {
-                        if !rule(candidate[i], candidate[j]) {
-                            return true;
-                        }
-                    }
-                }
+
+    let mut pages = Vec::with_capacity(23);
+    let mut sorted_pages = Vec::with_capacity(23);
+    while i < INPUT.len() {
+        loop {
+            pages.push(parse_two_digits!(INPUT[i], INPUT[i + 1]));
+            i += 3;
+            if INPUT[i - 1] == b'\n' {
+                break;
             }
-            false
-        })
-        .collect::<Vec<_>>();
-    for mut loser in losers {
-        loser.sort_by(|a, b| {
+        }
+        if pages.is_empty() {
+            break;
+        }
+        for page in pages.iter().copied() {
+            sorted_pages.push(page);
+        }
+        sorted_pages.sort_unstable_by(|&a, &b| {
             if a == b {
-                return core::cmp::Ordering::Equal;
+                core::cmp::Ordering::Equal
+            } else if violations.binary_search(&(a, b)).is_ok() {
+                core::cmp::Ordering::Greater
+            } else {
+                core::cmp::Ordering::Less
             }
-            for rule in &rules {
-                if !rule(*a, *b) {
-                    return core::cmp::Ordering::Greater;
-                }
-            }
-            return core::cmp::Ordering::Less;
         });
-        part2 += loser[loser.len() / 2];
+
+        let middle_element = sorted_pages[sorted_pages.len() / 2];
+        if pages == sorted_pages {
+            part1 += middle_element as u16;
+        } else {
+            part2 += middle_element as u16;
+        }
+
+        pages.clear();
+        sorted_pages.clear();
     }
 
     let time = start.elapsed();
