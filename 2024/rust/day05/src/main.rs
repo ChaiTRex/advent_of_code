@@ -1,6 +1,8 @@
 fn main() {
     static INPUT: &str = include_str!("../../../day05.txt");
 
+    let start = std::time::Instant::now();
+
     let (rules, candidates) = INPUT.split_once("\n\n").unwrap();
     let rules = rules
         .lines()
@@ -37,8 +39,6 @@ fn main() {
         part1 += winner[winner.len() / 2];
     }
 
-    println!("{part1}");
-
     let mut part2 = 0;
     let losers = candidates
         .into_iter()
@@ -70,5 +70,6 @@ fn main() {
         part2 += loser[loser.len() / 2];
     }
 
-    println!("{part2}");
+    let time = start.elapsed();
+    println!("Part 1: {part1}\nPart 2: {part2}\nTime taken: {time:?}",);
 }
