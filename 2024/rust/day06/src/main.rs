@@ -19,6 +19,8 @@ fn main() {
         West,
     }
 
+    let start = std::time::Instant::now();
+
     let mut guard = (1000, 1000);
 
     let mut map = INPUT
@@ -184,7 +186,6 @@ fn main() {
     }
 
     let part1 = follow_map(map.clone(), guard).unwrap();
-    println!("{part1:?}");
 
     let mut part2 = 0;
     for y in 0..height {
@@ -198,5 +199,6 @@ fn main() {
         }
     }
 
-    println!("{part2}");
+    let time = start.elapsed();
+    println!("Part 1: {part1}\nPart 2: {part2}\nTime taken: {time:?}",);
 }
