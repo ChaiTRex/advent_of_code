@@ -26,7 +26,6 @@ fn main() {
     let mut part2 = 0;
 
     let mut pages = Vec::with_capacity(23);
-    let mut sorted_pages = Vec::with_capacity(23);
     while i < INPUT.len() {
         loop {
             pages.push(parse_two_digits!(INPUT[i], INPUT[i + 1]));
@@ -38,28 +37,25 @@ fn main() {
         if pages.is_empty() {
             break;
         }
-        for page in pages.iter().copied() {
-            sorted_pages.push(page);
-        }
-        sorted_pages.sort_unstable_by(|&a, &b| {
-            if a == b {
-                core::cmp::Ordering::Equal
-            } else if violations.contains(&(a, b)) {
-                core::cmp::Ordering::Greater
-            } else {
-                core::cmp::Ordering::Less
-            }
-        });
-
-        let middle_element = sorted_pages[sorted_pages.len() / 2] as u16;
-        if pages == sorted_pages {
+        if pages.is_sorted_by(|&a, &b| a == b || !violations.contains(&(a, b))) {
+            let middle_element = pages[pages.len() / 2] as u16;
             part1 += middle_element;
         } else {
-            part2 += middle_element;
+            let n = pages.len() / 2;
+            part2 += *pages
+                .select_nth_unstable_by(n, |&a, &b| {
+                    if a == b {
+                        core::cmp::Ordering::Equal
+                    } else if violations.contains(&(a, b)) {
+                        core::cmp::Ordering::Greater
+                    } else {
+                        core::cmp::Ordering::Less
+                    }
+                })
+                .1 as u16;
         }
 
         pages.clear();
-        sorted_pages.clear();
     }
 
     let time = start.elapsed();
