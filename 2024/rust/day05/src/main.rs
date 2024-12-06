@@ -11,12 +11,12 @@ fn main() {
 
     let start = std::time::Instant::now();
 
-    let mut violations = HashSet::with_capacity(1176);
+    let mut rules = HashSet::with_capacity(1176);
     let mut i = 0;
     while INPUT[i] != b'\n' {
-        violations.insert((
-            parse_two_digits!(INPUT[i + 3], INPUT[i + 4]),
+        rules.insert((
             parse_two_digits!(INPUT[i], INPUT[i + 1]),
+            parse_two_digits!(INPUT[i + 3], INPUT[i + 4]),
         ));
         i += 6;
     }
@@ -37,7 +37,7 @@ fn main() {
         if pages.is_empty() {
             break;
         }
-        if pages.is_sorted_by(|&a, &b| a == b || !violations.contains(&(a, b))) {
+        if pages.is_sorted_by(|&a, &b| a == b || rules.contains(&(a, b))) {
             let middle_element = pages[pages.len() / 2] as u16;
             part1 += middle_element;
         } else {
@@ -46,10 +46,10 @@ fn main() {
                 .select_nth_unstable_by(n, |&a, &b| {
                     if a == b {
                         core::cmp::Ordering::Equal
-                    } else if violations.contains(&(a, b)) {
-                        core::cmp::Ordering::Greater
-                    } else {
+                    } else if rules.contains(&(a, b)) {
                         core::cmp::Ordering::Less
+                    } else {
+                        core::cmp::Ordering::Greater
                     }
                 })
                 .1 as u16;
