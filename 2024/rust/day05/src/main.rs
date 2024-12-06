@@ -37,17 +37,17 @@ fn main() {
         if pages.is_empty() {
             break;
         }
-        if pages.is_sorted_by(|&a, &b| a == b || rules.contains(&(a, b))) {
-            let middle_element = pages[pages.len() / 2] as u16;
-            part1 += middle_element;
+
+        let middle_index = pages.len() / 2;
+        if pages.is_sorted_by(|&a, &b| rules.contains(&(a, b)) || a == b) {
+            part1 += pages[middle_index] as u16;
         } else {
-            let n = pages.len() / 2;
             part2 += *pages
-                .select_nth_unstable_by(n, |&a, &b| {
-                    if a == b {
-                        core::cmp::Ordering::Equal
-                    } else if rules.contains(&(a, b)) {
+                .select_nth_unstable_by(middle_index, |&a, &b| {
+                    if rules.contains(&(a, b)) {
                         core::cmp::Ordering::Less
+                    } else if a == b {
+                        core::cmp::Ordering::Equal
                     } else {
                         core::cmp::Ordering::Greater
                     }
