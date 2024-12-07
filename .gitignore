@@ -3,3 +3,6 @@
 
 # Ignore Rust build artifacts.
 **/target/
+
+# Ignore macOS directory appearance file
+**/.DS_Store
