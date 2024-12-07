@@ -1,6 +1,7 @@
-fn ilog10(val: u16) -> usize {
+fn next_power_of_10(val: u16) -> u64 {
     // Specialized-to-this-problem version of the Rust language
-    // standard library's `u8::ilog10` function.
+    // standard library's `u8::ilog10` function that then goes on
+    // to give the next power of 10 after `val`.
     //
     // https://github.com/rust-lang/rust/blob/404e9c5e3ad75057b6bbb3bcd44fe60480e50294/library/core/src/num/int_log10.rs#L6-L23
 
@@ -17,7 +18,11 @@ fn ilog10(val: u16) -> usize {
     //     1..=9   10   01   00 = 0
     //   10..=99   11   01   01 = 1
     // 100..=999   11   10   10 = 2
-    (((val + C1) & (val + C2)) >> 10) as usize
+    let ilog10 = ((val + C1) & (val + C2)) >> 10;
+
+    const POWERS_OF_10: u64 = (1000 << 32) | (100 << 16) | 10;
+
+    (POWERS_OF_10 >> (ilog10 << 4)) & 0b11111_11111
 }
 
 fn main() {
@@ -41,7 +46,7 @@ fn main() {
                     || g(correct_result, current_result * operand as u64, operands)
                     || g(
                         correct_result,
-                        [10, 100, 1000][ilog10(operand)] * current_result + operand as u64,
+                        next_power_of_10(operand) * current_result + operand as u64,
                         operands,
                     )
             }
