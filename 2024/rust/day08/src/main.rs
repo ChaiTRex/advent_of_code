@@ -3,6 +3,8 @@ use std::collections::{HashMap, HashSet};
 fn main() {
     static INPUT: &str = include_str!("../../../day08.txt");
 
+    let start = std::time::Instant::now();
+
     let width = INPUT.lines().next().unwrap().len();
     let height = 50; // INPUT.len() / width;
     let mut antennas = HashMap::new();
@@ -18,7 +20,7 @@ fn main() {
     }
 
     let mut antinodes = HashSet::new();
-    for (kind, nodes) in antennas.iter() {
+    for nodes in antennas.values() {
         for i in 0..nodes.len() - 1 {
             let a = nodes[i];
             for j in i + 1..nodes.len() {
@@ -39,8 +41,6 @@ fn main() {
     }
     let part1 = antinodes.len();
 
-    println!("{part1}");
-
     fn gcd(mut a: i32, mut b: i32) -> i32 {
         loop {
             if b == 0 {
@@ -53,7 +53,7 @@ fn main() {
     }
 
     antinodes.clear();
-    for (kind, nodes) in antennas.iter() {
+    for nodes in antennas.values() {
         for i in 0..nodes.len() - 1 {
             let a = nodes[i];
             for j in i + 1..nodes.len() {
@@ -85,5 +85,6 @@ fn main() {
     }
     let part2 = antinodes.len();
 
-    println!("{part2}");
+    let time = start.elapsed();
+    println!("Part 1: {part1}\nPart 2: {part2}\nTime taken: {time:?}",);
 }
