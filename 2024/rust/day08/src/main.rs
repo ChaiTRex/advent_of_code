@@ -1,59 +1,101 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
+
+/// Gives the greatest common denominator of the two inputs, unless that's 2⁷.
+/// 2⁷ doesn't fit in an `i8`, so it returns -2⁷, which does.
+pub fn gcd(u: i8, v: i8) -> i8 {
+    let mut v = v.unsigned_abs();
+    if u == 0 {
+        return v as i8;
+    }
+    let mut u = u.unsigned_abs();
+    if v == 0 {
+        return u as i8;
+    }
+
+    // `|` is bitwise OR. `trailing_zeros` quickly counts a binary number's
+    // trailing zeros, giving its prime factorization's exponent on two.
+    let gcd_exponent_on_two = (u | v).trailing_zeros();
+
+    // `>>=` divides the left by two to the power of the right, storing that in
+    // the left variable. `u` divided by its prime factorization's power of two
+    // turns it odd.
+    u >>= u.trailing_zeros();
+    v >>= v.trailing_zeros();
+
+    while u != v {
+        if u < v {
+            // Swap the variables' values with each other.
+            core::mem::swap(&mut u, &mut v);
+        }
+        u -= v;
+        u >>= u.trailing_zeros();
+    }
+
+    // `<<` multiplies the left by two to the power of the right.
+    (u << gcd_exponent_on_two) as i8
+}
 
 fn main() {
-    static INPUT: &str = include_str!("../../../day08.txt");
+    static INPUT: &[u8] = include_bytes!("../../../day08.txt");
+    const WIDTH: i8 = {
+        let mut i = 0;
+
+        while INPUT[i] != b'\n' {
+            i += 1;
+        }
+
+        i as i8
+    };
+    const LINE_WIDTH: i8 = WIDTH + 1;
+    const HEIGHT: i8 = (INPUT.len() / LINE_WIDTH as usize) as i8;
 
     let start = std::time::Instant::now();
 
-    let width = INPUT.lines().next().unwrap().len();
-    let height = 50; // INPUT.len() / width;
-    let mut antennas = HashMap::new();
-    for (y, row) in INPUT.lines().enumerate() {
-        for (x, antenna) in row.bytes().enumerate() {
-            if antenna != b'.' {
-                antennas
-                    .entry(antenna as char)
-                    .or_insert(Vec::new())
-                    .push((x as i32, y as i32));
+    const ORIGINAL_ANTENNAS_LEN: usize = (b'z' - b'0' + 1) as usize;
+    let mut antennas = vec![Vec::new(); ORIGINAL_ANTENNAS_LEN];
+
+    let mut i = 0;
+    let mut x = 0;
+    let mut y = 0;
+    while y < HEIGHT {
+        while x < WIDTH {
+            let value = INPUT[i];
+            if value != b'.' {
+                antennas[(value - b'0') as usize].push((x, y));
             }
+            i += 1;
+            x += 1;
         }
+        i += const { (LINE_WIDTH - WIDTH) as usize };
+        x = 0;
+        y += 1;
     }
+    antennas.retain(|nodes| !nodes.is_empty());
 
     let mut antinodes = HashSet::new();
-    for nodes in antennas.values() {
+    for nodes in &antennas {
         for i in 0..nodes.len() - 1 {
             let a = nodes[i];
             for j in i + 1..nodes.len() {
                 let b = nodes[j];
 
-                if (0..width as i32).contains(&(2 * a.0 - b.0))
-                    && (0..height as i32).contains(&(2 * a.1 - b.1))
-                {
-                    antinodes.insert((2 * a.0 - b.0, 2 * a.1 - b.1));
+                let x = 2 * a.0 - b.0;
+                let y = 2 * a.1 - b.1;
+                if (0..WIDTH).contains(&x) && (0..HEIGHT).contains(&y) {
+                    antinodes.insert((x, y));
                 }
-                if (0..width as i32).contains(&(2 * b.0 - a.0))
-                    && (0..height as i32).contains(&(2 * b.1 - a.1))
-                {
-                    antinodes.insert((2 * b.0 - a.0, 2 * b.1 - a.1));
+                let x = 2 * b.0 - a.0;
+                let y = 2 * b.1 - a.1;
+                if (0..WIDTH).contains(&x) && (0..HEIGHT).contains(&y) {
+                    antinodes.insert((x, y));
                 }
             }
         }
     }
     let part1 = antinodes.len();
 
-    fn gcd(mut a: i32, mut b: i32) -> i32 {
-        loop {
-            if b == 0 {
-                return a;
-            }
-
-            a = a % b;
-            core::mem::swap(&mut a, &mut b);
-        }
-    }
-
     antinodes.clear();
-    for nodes in antennas.values() {
+    for nodes in &antennas {
         for i in 0..nodes.len() - 1 {
             let a = nodes[i];
             for j in i + 1..nodes.len() {
@@ -61,24 +103,24 @@ fn main() {
 
                 let x_diff = a.0 - b.0;
                 let y_diff = a.1 - b.1;
-                let g: i32 = gcd(x_diff.abs(), y_diff.abs());
+                let g: i8 = gcd(x_diff, y_diff);
                 let x_diff = x_diff / g;
                 let y_diff = y_diff / g;
 
-                let mut x_1 = a.0;
-                let mut y_1 = a.1;
-                while (0..width as i32).contains(&x_1) && (0..height as i32).contains(&y_1) {
-                    x_1 -= x_diff;
-                    y_1 -= y_diff;
+                let mut x = a.0;
+                let mut y = a.1;
+                while (0..WIDTH).contains(&x) && (0..HEIGHT).contains(&y) {
+                    antinodes.insert((x, y));
+                    x -= x_diff;
+                    y -= y_diff;
                 }
-                x_1 += x_diff;
-                y_1 += y_diff;
 
-                while (0..width as i32).contains(&x_1) && (0..height as i32).contains(&y_1) {
-                    antinodes.insert((x_1 as i32, y_1 as i32));
-
-                    x_1 += x_diff;
-                    y_1 += y_diff;
+                x = a.0 + x_diff;
+                y = a.1 + y_diff;
+                while (0..WIDTH).contains(&x) && (0..HEIGHT).contains(&y) {
+                    antinodes.insert((x, y));
+                    x += x_diff;
+                    y += y_diff;
                 }
             }
         }
