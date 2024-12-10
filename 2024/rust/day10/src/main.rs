@@ -2,6 +2,8 @@ use std::collections::HashSet;
 fn main() {
     static INPUT: &str = include_str!("../../../day10.txt");
 
+    let start = std::time::Instant::now();
+
     fn trailhead_score(
         map: &[Vec<u8>],
         height: usize,
@@ -79,6 +81,6 @@ fn main() {
         }
     }
 
-    println!("{part1}");
-    println!("{part2}");
+    let time = start.elapsed();
+    println!("Part 1: {part1}\nPart 2: {part2}\nTime taken: {time:?}",);
 }
