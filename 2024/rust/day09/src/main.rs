@@ -1,6 +1,8 @@
 fn main() {
     static INPUT: &[u8] = include_bytes!("../../../day09.txt");
 
+    let start = std::time::Instant::now();
+
     let mut disk = Vec::new();
     let mut i = 0;
     let mut file = 0_i16;
@@ -47,8 +49,6 @@ fn main() {
         .enumerate()
         .map(|(i, file)| i as u64 * file)
         .sum::<u64>();
-
-    println!("{part1}");
 
     let mut disk = Vec::new();
     let mut i = 0;
@@ -113,5 +113,7 @@ fn main() {
         .filter(|&(_, file)| *file != -1)
         .map(|(i, file)| i as u64 * *file as u64)
         .sum::<u64>();
-    println!("{part2}");
+
+    let time = start.elapsed();
+    println!("Part 1: {part1}\nPart 2: {part2}\nTime taken: {time:?}",);
 }
