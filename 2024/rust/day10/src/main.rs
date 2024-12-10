@@ -1,84 +1,66 @@
 use std::collections::HashSet;
+
 fn main() {
-    static INPUT: &str = include_str!("../../../day10.txt");
+    static INPUT: &[u8] = include_bytes!("../../../day10.txt");
+    const WIDTH: usize = {
+        let mut i = 0;
+        while INPUT[i].is_ascii_digit() {
+            i += 1;
+        }
+        i
+    };
+    const LINE_WIDTH: usize = {
+        let mut i = WIDTH;
+        while INPUT[i] != b'\n' {
+            i += 1;
+        }
+        i + 1
+    };
+    const HEIGHT: usize = INPUT.len() / LINE_WIDTH;
 
-    let start = std::time::Instant::now();
-
-    fn trailhead_score(
-        map: &[Vec<u8>],
-        height: usize,
-        width: usize,
-        (x, y): (usize, usize),
+    fn solve(
+        i: usize,
+        x: usize,
+        y: usize,
         trail_height: u8,
         trail_ends: &mut HashSet<(usize, usize)>,
-    ) {
-        if map[y][x] == 9 {
-            trail_ends.insert((x, y));
-            return;
-        }
-        if y > 0 && map[y - 1][x] == trail_height + 1 {
-            trailhead_score(map, height, width, (x, y - 1), trail_height + 1, trail_ends);
-        }
-        if x > 0 && map[y][x - 1] == trail_height + 1 {
-            trailhead_score(map, height, width, (x - 1, y), trail_height + 1, trail_ends);
-        }
-        if y < height - 1 && map[y + 1][x] == trail_height + 1 {
-            trailhead_score(map, height, width, (x, y + 1), trail_height + 1, trail_ends);
-        }
-        if x < width - 1 && map[y][x + 1] == trail_height + 1 {
-            trailhead_score(map, height, width, (x + 1, y), trail_height + 1, trail_ends);
-        }
-    }
-
-    let map = INPUT
-        .lines()
-        .map(|line| line.bytes().map(|b| b - b'0').collect::<Vec<_>>())
-        .collect::<Vec<_>>();
-
-    let mut part1 = 0;
-    for (y, row) in map.iter().enumerate() {
-        for (x, height) in row.iter().copied().enumerate() {
-            if height == 0 {
-                let mut exits = HashSet::new();
-                trailhead_score(&map, map.len(), row.len(), (x, y), 0, &mut exits);
-                part1 += exits.len();
-            }
-        }
-    }
-
-    fn trailhead_rating(
-        map: &[Vec<u8>],
-        height: usize,
-        width: usize,
-        (x, y): (usize, usize),
-        trail_height: u8,
     ) -> usize {
-        if map[y][x] == 9 {
+        if trail_height == b'9' {
+            trail_ends.insert((x, y));
             return 1;
         }
         let mut rating = 0;
-        if y > 0 && map[y - 1][x] == trail_height + 1 {
-            rating += trailhead_rating(map, height, width, (x, y - 1), trail_height + 1);
+        if y > 0 && INPUT[i - LINE_WIDTH] == trail_height + 1 {
+            rating += solve(i - LINE_WIDTH, x, y - 1, trail_height + 1, trail_ends);
         }
-        if x > 0 && map[y][x - 1] == trail_height + 1 {
-            rating += trailhead_rating(map, height, width, (x - 1, y), trail_height + 1);
+        if x > 0 && INPUT[i - 1] == trail_height + 1 {
+            rating += solve(i - 1, x - 1, y, trail_height + 1, trail_ends);
         }
-        if y < height - 1 && map[y + 1][x] == trail_height + 1 {
-            rating += trailhead_rating(map, height, width, (x, y + 1), trail_height + 1);
+        if y < HEIGHT - 1 && INPUT[i + LINE_WIDTH] == trail_height + 1 {
+            rating += solve(i + LINE_WIDTH, x, y + 1, trail_height + 1, trail_ends);
         }
-        if x < width - 1 && map[y][x + 1] == trail_height + 1 {
-            rating += trailhead_rating(map, height, width, (x + 1, y), trail_height + 1);
+        if x < WIDTH - 1 && INPUT[i + 1] == trail_height + 1 {
+            rating += solve(i + 1, x + 1, y, trail_height + 1, trail_ends);
         }
         rating
     }
 
+    let start = std::time::Instant::now();
+
+    let mut part1 = 0;
     let mut part2 = 0;
-    for (y, row) in map.iter().enumerate() {
-        for (x, height) in row.iter().copied().enumerate() {
-            if height == 0 {
-                part2 += trailhead_rating(&map, map.len(), row.len(), (x, y), 0);
+    let mut trail_ends = HashSet::with_capacity(7);
+    let mut i = 0;
+    for y in 0..HEIGHT {
+        for x in 0..WIDTH {
+            if INPUT[i] == b'0' {
+                part2 += solve(i, x, y, b'0', &mut trail_ends);
+                part1 += trail_ends.len();
+                trail_ends.clear();
             }
+            i += 1;
         }
+        i += LINE_WIDTH - WIDTH;
     }
 
     let time = start.elapsed();
