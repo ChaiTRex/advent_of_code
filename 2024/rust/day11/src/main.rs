@@ -3,6 +3,8 @@ use std::collections::HashMap;
 fn main() {
     static INPUT: &str = include_str!("../../../day11.txt");
 
+    let start = std::time::Instant::now();
+
     let mut counts = HashMap::new();
     for stone in INPUT
         .split_whitespace()
@@ -10,10 +12,12 @@ fn main() {
     {
         *counts.entry(stone).or_insert(0) += 1;
     }
-    println!("{counts:?}");
 
+    let mut part1 = 0;
     for i in 0..75 {
-        println!("Starting blink {i}");
+        if i == 25 {
+            part1 = counts.values().sum::<u64>();
+        }
         counts = {
             let mut tmp = HashMap::new();
             for (stone, count) in counts {
@@ -33,6 +37,8 @@ fn main() {
             tmp
         };
     }
-    let part1 = counts.values().sum::<u64>();
-    println!("{part1}");
+    let part2 = counts.values().sum::<u64>();
+
+    let time = start.elapsed();
+    println!("Part 1: {part1}\nPart 2: {part2}\nTime taken: {time:?}",);
 }
