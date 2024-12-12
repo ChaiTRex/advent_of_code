@@ -1,5 +1,8 @@
 fn main() {
     static INPUT: &str = include_str!("../../../day12.txt");
+
+    let start = std::time::Instant::now();
+
     let width = INPUT.lines().next().unwrap().len();
     let height = INPUT.lines().count();
 
@@ -144,7 +147,6 @@ fn main() {
             }
         }
     }
-    println!("{part1}");
 
     let mut visited = vec![vec![false; width]; height];
 
@@ -177,7 +179,6 @@ fn main() {
                 let mut side_count = 0;
                 while !north_walls.is_empty() {
                     let (x1, y1) = north_walls.remove(0);
-                    println!("North wall starting at {:?}", (x1, y1));
                     side_count += 1;
                     let mut x2 = x1 + 1;
                     loop {
@@ -188,11 +189,9 @@ fn main() {
                             break;
                         }
                     }
-                    println!("{side_count}");
                 }
                 while !east_walls.is_empty() {
                     let (x1, y1) = east_walls.remove(0);
-                    println!("East wall starting at {:?}", (x1, y1));
                     side_count += 1;
                     let mut y2 = y1 + 1;
                     loop {
@@ -203,11 +202,9 @@ fn main() {
                             break;
                         }
                     }
-                    println!("{side_count}");
                 }
                 while !south_walls.is_empty() {
                     let (x1, y1) = south_walls.remove(0);
-                    println!("South wall starting at {:?}", (x1, y1));
                     side_count += 1;
                     let mut x2 = x1 + 1;
                     loop {
@@ -218,11 +215,9 @@ fn main() {
                             break;
                         }
                     }
-                    println!("{side_count}");
                 }
                 while !west_walls.is_empty() {
                     let (x1, y1) = west_walls.remove(0);
-                    println!("West wall starting at {:?}", (x1, y1));
                     side_count += 1;
                     let mut y2 = y1 + 1;
                     loop {
@@ -233,12 +228,12 @@ fn main() {
                             break;
                         }
                     }
-                    println!("{side_count}");
                 }
-                dbg!(map[y][x] as char, side_count, area);
                 part2 += side_count * area;
             }
         }
     }
-    println!("{part2}");
+
+    let time = start.elapsed();
+    println!("Part 1: {part1}\nPart 2: {part2}\nTime taken: {time:?}",);
 }
