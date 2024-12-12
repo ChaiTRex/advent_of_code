@@ -1,24 +1,28 @@
 fn main() {
-    static INPUT: &str = include_str!("../../../day12.txt");
+    static INPUT: &[u8] = include_bytes!("../../../day12.txt");
+    const WIDTH: usize = {
+        let mut i = 0;
+        while INPUT[i].is_ascii_uppercase() {
+            i += 1;
+        }
+        i
+    };
+    const LINE_WIDTH: usize = {
+        let mut i = WIDTH;
+        while INPUT[i] != b'\n' {
+            i += 1;
+        }
+        i + 1
+    };
+    const HEIGHT: usize = INPUT.len() / LINE_WIDTH;
 
     let start = std::time::Instant::now();
 
-    let width = INPUT.lines().next().unwrap().len();
-    let height = INPUT.lines().count();
-
-    let map = INPUT
-        .lines()
-        .map(|line| line.bytes().collect::<Vec<_>>())
-        .collect::<Vec<_>>();
-    let mut visited = vec![vec![false; width]; height];
-
     fn f(
-        map: &[Vec<u8>],
         visited: &mut [Vec<bool>],
-        width: usize,
-        height: usize,
         x: usize,
         y: usize,
+        i: usize,
         north_walls: &mut Vec<(usize, usize)>,
         east_walls: &mut Vec<(usize, usize)>,
         south_walls: &mut Vec<(usize, usize)>,
@@ -29,15 +33,13 @@ fn main() {
 
         let mut perimeter = 0;
         let mut area = 1;
-        if y > 0 && map[y - 1][x] == crop_type {
+        if y > 0 && INPUT[LINE_WIDTH * (y - 1) + x] == crop_type {
             if !visited[y - 1][x] {
                 let (up_perimeter, up_area) = f(
-                    map,
                     visited,
-                    width,
-                    height,
                     x,
                     y - 1,
+                    i - LINE_WIDTH,
                     north_walls,
                     east_walls,
                     south_walls,
@@ -51,15 +53,13 @@ fn main() {
             perimeter += 1;
             north_walls.push((x, y));
         }
-        if x > 0 && map[y][x - 1] == crop_type {
+        if x > 0 && INPUT[LINE_WIDTH * y + x - 1] == crop_type {
             if !visited[y][x - 1] {
                 let (left_perimeter, left_area) = f(
-                    map,
                     visited,
-                    width,
-                    height,
                     x - 1,
                     y,
+                    i - 1,
                     north_walls,
                     east_walls,
                     south_walls,
@@ -73,15 +73,13 @@ fn main() {
             perimeter += 1;
             west_walls.push((x, y));
         }
-        if y < height - 1 && map[y + 1][x] == crop_type {
+        if y < HEIGHT - 1 && INPUT[LINE_WIDTH * (y + 1) + x] == crop_type {
             if !visited[y + 1][x] {
                 let (down_perimeter, down_area) = f(
-                    map,
                     visited,
-                    width,
-                    height,
                     x,
                     y + 1,
+                    i + LINE_WIDTH,
                     north_walls,
                     east_walls,
                     south_walls,
@@ -95,15 +93,13 @@ fn main() {
             perimeter += 1;
             south_walls.push((x, y));
         }
-        if x < width - 1 && map[y][x + 1] == crop_type {
+        if x < WIDTH - 1 && INPUT[LINE_WIDTH * y + x + 1] == crop_type {
             if !visited[y][x + 1] {
                 let (right_perimeter, right_area) = f(
-                    map,
                     visited,
-                    width,
-                    height,
                     x + 1,
                     y,
+                    i + 1,
                     north_walls,
                     east_walls,
                     south_walls,
@@ -121,9 +117,13 @@ fn main() {
         (perimeter, area)
     }
 
+    let mut visited = vec![vec![false; WIDTH]; HEIGHT];
+
     let mut part1 = 0;
-    for y in 0..height {
-        for x in 0..width {
+    let mut part2 = 0;
+    let mut i = 0;
+    for y in 0..HEIGHT {
+        for x in 0..WIDTH {
             if !visited[y][x] {
                 let mut north_walls = Vec::new();
                 let mut east_walls = Vec::new();
@@ -131,47 +131,18 @@ fn main() {
                 let mut west_walls = Vec::new();
 
                 let (perimeter, area) = f(
-                    &map,
                     &mut visited,
-                    width,
-                    height,
                     x,
                     y,
+                    i,
                     &mut north_walls,
                     &mut east_walls,
                     &mut south_walls,
                     &mut west_walls,
-                    map[y][x],
+                    INPUT[i],
                 );
                 part1 += perimeter * area;
-            }
-        }
-    }
 
-    let mut visited = vec![vec![false; width]; height];
-
-    let mut part2 = 0;
-    for y in 0..height {
-        for x in 0..width {
-            if !visited[y][x] {
-                let mut north_walls = Vec::new();
-                let mut east_walls = Vec::new();
-                let mut south_walls = Vec::new();
-                let mut west_walls = Vec::new();
-
-                let (_, area) = f(
-                    &map,
-                    &mut visited,
-                    width,
-                    height,
-                    x,
-                    y,
-                    &mut north_walls,
-                    &mut east_walls,
-                    &mut south_walls,
-                    &mut west_walls,
-                    map[y][x],
-                );
                 north_walls.sort();
                 east_walls.sort();
                 west_walls.sort();
@@ -231,7 +202,9 @@ fn main() {
                 }
                 part2 += side_count * area;
             }
+            i += 1;
         }
+        i += const { LINE_WIDTH - WIDTH };
     }
 
     let time = start.elapsed();
