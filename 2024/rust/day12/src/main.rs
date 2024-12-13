@@ -23,53 +23,53 @@ fn main() {
     let mut i = 0;
     for y in 0..HEIGHT {
         for x in 0..WIDTH {
-            let walls = [
-                y == 0 || INPUT[i] != INPUT[i - LINE_WIDTH], // up
-                x == 0 || INPUT[i] != INPUT[i - 1],          // left
-                x == WIDTH - 1 || INPUT[i] != INPUT[i + 1],  // right
-                y == HEIGHT - 1 || INPUT[i] != INPUT[i + LINE_WIDTH], // down
-            ];
-            perimeters[i] = walls.iter().filter(|&&b| b).count() as u8;
-            if walls[0] & walls[1] {
-                corner_counts[i] += 1;
-                if y != 0 && x != 0 {
-                    let other_crop = INPUT[i - LINE_WIDTH - 1];
-                    if other_crop == INPUT[i - LINE_WIDTH] && other_crop == INPUT[i - 1] {
-                        corner_counts[i - LINE_WIDTH - 1] += 1;
-                    }
-                }
+            let up_is_fence = y == 0 || INPUT[i] != INPUT[i - LINE_WIDTH];
+            let left_is_fence = x == 0 || INPUT[i] != INPUT[i - 1];
+            let right_is_fence = x == WIDTH - 1 || INPUT[i] != INPUT[i + 1];
+            let down_is_fence = y == HEIGHT - 1 || INPUT[i] != INPUT[i + LINE_WIDTH];
+
+            perimeters[i] = up_is_fence as u8
+                + left_is_fence as u8
+                + right_is_fence as u8
+                + down_is_fence as u8;
+
+            macro_rules! outward_corners {
+                (
+                    $input:ident,
+                    $corner_counts:ident,
+                    $i:ident :
+                    $({
+                        $is_fence_a:ident,
+                        $is_fence_b:ident,
+                        $cond_1:expr,
+                        $cond_2:expr,
+                        $i_corner:expr,
+                        $i_1:expr,
+                        $i_2:expr
+                    };)+
+                ) => {
+                    $(
+                        if $is_fence_a & $is_fence_b {
+                            $corner_counts[$i] += 1;
+                            if $cond_1 && $cond_2 {
+                                let other_crop = $input[$i_1];
+                                if other_crop == $input[$i_corner] && other_crop == $input[$i_2] {
+                                    $corner_counts[$i_corner] += 1;
+                                }
+                            }
+                        }
+                    )*
+                };
             }
-            if walls[0] & walls[2] {
-                corner_counts[i] += 1;
-                if x != WIDTH - 1 && y != 0 {
-                    let other_crop = INPUT[i - LINE_WIDTH];
-                    if other_crop == INPUT[i - LINE_WIDTH + 1] && other_crop == INPUT[i + 1] {
-                        corner_counts[i - LINE_WIDTH + 1] += 1;
-                    }
-                }
-            }
-            if walls[1] & walls[3] {
-                corner_counts[i] += 1;
-                if x != 0 && y != HEIGHT - 1 {
-                    let other_crop = INPUT[i - 1];
-                    if other_crop == INPUT[i + LINE_WIDTH - 1]
-                        && other_crop == INPUT[i + LINE_WIDTH]
-                    {
-                        corner_counts[i + LINE_WIDTH - 1] += 1;
-                    }
-                }
-            }
-            if walls[2] & walls[3] {
-                corner_counts[i] += 1;
-                if x != WIDTH - 1 && y != HEIGHT - 1 {
-                    let other_crop = INPUT[i + 1];
-                    if other_crop == INPUT[i + LINE_WIDTH]
-                        && other_crop == INPUT[i + LINE_WIDTH + 1]
-                    {
-                        corner_counts[i + LINE_WIDTH + 1] += 1;
-                    }
-                }
-            }
+
+            outward_corners!(
+                INPUT, corner_counts, i:
+                { up_is_fence, left_is_fence, x != 0, y != 0, i - LINE_WIDTH - 1, i - LINE_WIDTH, i - 1 };
+                { up_is_fence, right_is_fence, x != WIDTH - 1, y != 0, i - LINE_WIDTH + 1, i - LINE_WIDTH, i + 1 };
+                { left_is_fence, down_is_fence, x != 0, y != HEIGHT - 1, i + LINE_WIDTH - 1, i + LINE_WIDTH, i - 1 };
+                { right_is_fence, down_is_fence, x != WIDTH - 1, y != HEIGHT - 1, i + LINE_WIDTH + 1, i + LINE_WIDTH, i + 1 };
+            );
+
             i += 1;
         }
         i += LINE_WIDTH - WIDTH;
