@@ -1,6 +1,8 @@
 fn main() {
     static INPUT: &str = include_str!("../../../day13.txt");
 
+    let start = std::time::Instant::now();
+
     let mut machines = Vec::new();
     let mut iter = INPUT.lines();
     loop {
@@ -198,11 +200,12 @@ fn main() {
     for &(ax, ay, bx, by, px, py) in &machines {
         part1 += f(ax, ay, bx, by, px, py);
     }
-    println!("{part1}");
 
     let mut part2 = 0;
     for &(ax, ay, bx, by, px, py) in &machines {
         part2 += f(ax, ay, bx, by, px + 10000000000000, py + 10000000000000);
     }
-    println!("{part2}");
+
+    let time = start.elapsed();
+    println!("Part 1: {part1}\nPart 2: {part2}\nTime taken: {time:?}",);
 }
