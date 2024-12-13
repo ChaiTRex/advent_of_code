@@ -1,25 +1,9 @@
 fn main() {
-    static INPUT: &[u8] = include_bytes!("../../../day12.txt");
-    const WIDTH: usize = {
-        let mut i = 0;
-        while INPUT[i].is_ascii_uppercase() {
-            i += 1;
-        }
-        i
-    };
-    const LINE_WIDTH: usize = {
-        let mut i = WIDTH;
-        while INPUT[i] != b'\n' {
-            i += 1;
-        }
-        i + 1
-    };
-    const HEIGHT: usize = INPUT.len() / LINE_WIDTH;
-
     let start = std::time::Instant::now();
 
-    let mut corner_counts = vec![0_u8; LINE_WIDTH * HEIGHT];
-    let mut perimeters = vec![0_u8; LINE_WIDTH * HEIGHT];
+    let mut unvisited = vec![true; FARM_SIZE];
+    let mut perimeters = vec![0_u8; FARM_SIZE];
+    let mut corner_counts = vec![0_u8; FARM_SIZE];
     let mut i = 0;
     for y in 0..HEIGHT {
         for x in 0..WIDTH {
@@ -35,18 +19,8 @@ fn main() {
 
             macro_rules! outward_corners {
                 (
-                    $input:ident,
-                    $corner_counts:ident,
-                    $i:ident :
-                    $({
-                        $is_fence_a:ident,
-                        $is_fence_b:ident,
-                        $cond_1:expr,
-                        $cond_2:expr,
-                        $i_corner:expr,
-                        $i_1:expr,
-                        $i_2:expr
-                    };)+
+                    $input:ident, $corner_counts:ident, $i:ident :
+                    $({ $is_fence_a:ident, $is_fence_b:ident, $cond_1:expr, $cond_2:expr, $i_corner:expr, $i_1:expr, $i_2:expr };)+
                 ) => {
                     $(
                         if $is_fence_a & $is_fence_b {
@@ -75,94 +49,14 @@ fn main() {
         i += LINE_WIDTH - WIDTH;
     }
 
-    fn f(
-        visited: &mut [bool],
-        perimeters: &[u8],
-        corner_counts: &[u8],
-        x: usize,
-        y: usize,
-        i: usize,
-        crop_type: u8,
-    ) -> (u64, u64, u64) {
-        visited[i] = true;
-
-        let mut corner_count = corner_counts[i] as u64;
-        let mut perimeter = perimeters[i] as u64;
-        let mut area = 1;
-        let up_i = i - LINE_WIDTH;
-        if y > 0 && INPUT[up_i] == crop_type && !visited[up_i] {
-            let (up_perimeter, up_corner_count, up_area) = f(
-                visited,
-                perimeters,
-                corner_counts,
-                x,
-                y - 1,
-                up_i,
-                crop_type,
-            );
-            perimeter += up_perimeter;
-            corner_count += up_corner_count;
-            area += up_area;
-        }
-        let left_i = i - 1;
-        if x > 0 && INPUT[left_i] == crop_type && !visited[left_i] {
-            let (left_perimeter, left_corner_count, left_area) = f(
-                visited,
-                perimeters,
-                corner_counts,
-                x - 1,
-                y,
-                left_i,
-                crop_type,
-            );
-            perimeter += left_perimeter;
-            corner_count += left_corner_count;
-            area += left_area;
-        }
-        let right_i = i + 1;
-        if x < WIDTH - 1 && INPUT[right_i] == crop_type && !visited[right_i] {
-            let (right_perimeter, right_corner_count, right_area) = f(
-                visited,
-                perimeters,
-                corner_counts,
-                x + 1,
-                y,
-                right_i,
-                crop_type,
-            );
-            perimeter += right_perimeter;
-            corner_count += right_corner_count;
-            area += right_area;
-        }
-        let down_i = i + LINE_WIDTH;
-        if y < HEIGHT - 1 && INPUT[down_i] == crop_type && !visited[down_i] {
-            let (down_perimeter, down_corner_count, down_area) = f(
-                visited,
-                perimeters,
-                corner_counts,
-                x,
-                y + 1,
-                down_i,
-                crop_type,
-            );
-            perimeter += down_perimeter;
-            corner_count += down_corner_count;
-            area += down_area;
-        }
-
-        (perimeter, corner_count, area)
-    }
-
-    let mut visited = vec![false; LINE_WIDTH * HEIGHT];
-
     let mut part1 = 0;
     let mut part2 = 0;
     let mut i = 0;
     for y in 0..HEIGHT {
         for x in 0..WIDTH {
-            if !visited[i] {
+            if unvisited[i] {
                 let (perimeter, corner_count, area) =
-                    f(&mut visited, &perimeters, &corner_counts, x, y, i, INPUT[i]);
+                    visit_region(&mut unvisited, &perimeters, &corner_counts, x, y, i);
                 part1 += perimeter * area;
                 part2 += corner_count * area;
             }
@@ -174,3 +68,63 @@ fn main() {
     let time = start.elapsed();
     println!("Part 1: {part1}\nPart 2: {part2}\nTime taken: {time:?}",);
 }
+
+fn visit_region(
+    unvisited: &mut [bool],
+    perimeters: &[u8],
+    corner_counts: &[u8],
+    x: usize,
+    y: usize,
+    i: usize,
+) -> (u64, u64, u64) {
+    unvisited[i] = false;
+
+    let mut corner_count = corner_counts[i] as u64;
+    let mut perimeter = perimeters[i] as u64;
+    let mut area = 1;
+
+    macro_rules! visit {
+        (
+            $input:ident, $unvisited:ident, $perimeters:ident, $corner_counts:ident, $perimeter:ident, $corner_count:ident, $area:ident :
+            $({ $cond:expr, $i:ident, $i_after_move:expr, $x_after_move:expr, $y_after_move:expr };)+
+        ) => {
+            $(
+                let i_after_move = $i_after_move;
+                if $cond && $input[$i] == $input[i_after_move] && $unvisited[i_after_move] {
+                    let (added_perimeter, added_corner_count, added_area) = visit_region($unvisited, $perimeters, $corner_counts, $x_after_move, $y_after_move, i_after_move);
+                    $perimeter += added_perimeter;
+                    $corner_count += added_corner_count;
+                    $area += added_area;
+                }
+            )*
+        };
+    }
+
+    visit!(
+        INPUT, unvisited, perimeters, corner_counts, perimeter, corner_count, area :
+        { y > 0, i, i - LINE_WIDTH, x, y - 1 };
+        { x > 0, i, i - 1, x - 1, y };
+        { x < WIDTH - 1, i, i + 1, x + 1, y };
+        { y < HEIGHT - 1, i, i + LINE_WIDTH, x, y + 1 };
+    );
+
+    (perimeter, corner_count, area)
+}
+
+static INPUT: &[u8] = include_bytes!("../../../day12.txt");
+const WIDTH: usize = {
+    let mut i = 0;
+    while INPUT[i].is_ascii_uppercase() {
+        i += 1;
+    }
+    i
+};
+const LINE_WIDTH: usize = {
+    let mut i = WIDTH;
+    while INPUT[i] != b'\n' {
+        i += 1;
+    }
+    i + 1
+};
+const HEIGHT: usize = INPUT.len() / LINE_WIDTH;
+const FARM_SIZE: usize = LINE_WIDTH * (HEIGHT - 1) + WIDTH;
