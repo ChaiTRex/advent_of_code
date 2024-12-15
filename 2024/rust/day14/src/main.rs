@@ -17,33 +17,36 @@ fn main() {
         })
         .collect::<Vec<_>>();
 
-    let mut part1 = 0;
+    let mut upper_left = 0;
+    let mut upper_right = 0;
+    let mut lower_left = 0;
+    let mut lower_right = 0;
+    for &((mut x, mut y), (vx, vy)) in &robots {
+        x = (x + 100 * vx).rem_euclid(WIDTH as i32);
+        y = (y + 100 * vy).rem_euclid(HEIGHT as i32);
+        if x < WIDTH as i32 / 2 {
+            if y < HEIGHT as i32 / 2 {
+                upper_left += 1;
+            } else if y > HEIGHT as i32 / 2 {
+                lower_left += 1;
+            }
+        } else if x > WIDTH as i32 / 2 {
+            if y < HEIGHT as i32 / 2 {
+                upper_right += 1;
+            } else if y > HEIGHT as i32 / 2 {
+                lower_right += 1;
+            }
+        }
+    }
+    let part1 = upper_left * upper_right * lower_left * lower_right;
+
     let mut horizontal_band = 0;
     let mut vertical_band = 0;
-    for time in 0..WIDTH.max(HEIGHT).min(101) {
-        if time == 100 {
-            let mut upper_left = 0;
-            let mut upper_right = 0;
-            let mut lower_left = 0;
-            let mut lower_right = 0;
-            for &((x, y), _) in &robots {
-                if x < WIDTH as i32 / 2 {
-                    if y < HEIGHT as i32 / 2 {
-                        upper_left += 1;
-                    } else if y > HEIGHT as i32 / 2 {
-                        lower_left += 1;
-                    }
-                } else if x > WIDTH as i32 / 2 {
-                    if y < HEIGHT as i32 / 2 {
-                        upper_right += 1;
-                    } else if y > HEIGHT as i32 / 2 {
-                        lower_right += 1;
-                    }
-                }
-            }
-            part1 = upper_left * upper_right * lower_left * lower_right;
+    let mut i = 0;
+    loop {
+        if horizontal_band != 0 && vertical_band != 0 {
+            break;
         }
-
         let mut row_counts = [0; HEIGHT];
         let mut column_counts = [0; WIDTH];
         let mut map = vec![vec![' '; WIDTH as usize]; HEIGHT as usize];
@@ -54,7 +57,7 @@ fn main() {
         }
 
         if horizontal_band == 0
-            && time < HEIGHT
+            && i < HEIGHT
             && row_counts.windows(CHRISTMAS_TREE_HEIGHT).any(|slice| {
                 slice
                     .into_iter()
@@ -62,10 +65,10 @@ fn main() {
                     .all(|(map_count, tree_count)| map_count >= tree_count)
             })
         {
-            horizontal_band = time;
+            horizontal_band = i;
         }
         if vertical_band == 0
-            && time < WIDTH
+            && i < WIDTH
             && column_counts.windows(CHRISTMAS_TREE_HEIGHT).any(|slice| {
                 slice
                     .into_iter()
@@ -73,13 +76,14 @@ fn main() {
                     .all(|(map_count, tree_count)| map_count >= tree_count)
             })
         {
-            vertical_band = time;
+            vertical_band = i;
         }
 
         for ((x, y), (vx, vy)) in &mut robots {
             *x = (*x + *vx).rem_euclid(WIDTH as i32);
             *y = (*y + *vy).rem_euclid(HEIGHT as i32);
         }
+        i += 1;
     }
 
     // Chinese remainder theorem with coprime moduluses
@@ -91,10 +95,8 @@ fn main() {
 
     let mut map = [[b' '; WIDTH]; HEIGHT];
     for ((mut x, mut y), (vx, vy)) in robots {
-        x = (x + vx * (WIDTH * HEIGHT + part2 - WIDTH.max(HEIGHT).min(101)) as i32)
-            .rem_euclid(WIDTH as i32);
-        y = (y + vy * (WIDTH * HEIGHT + part2 - WIDTH.max(HEIGHT).min(101)) as i32)
-            .rem_euclid(HEIGHT as i32);
+        x = (x + vx * ((part2 - i) as i32)).rem_euclid(WIDTH as i32);
+        y = (y + vy * ((part2 - i) as i32)).rem_euclid(HEIGHT as i32);
         map[y as usize][x as usize] = b'*';
     }
     print!("+");
@@ -121,9 +123,9 @@ fn main() {
 static INPUT: &str = include_str!("../../../day14.txt");
 const WIDTH: usize = 101;
 const HEIGHT: usize = 103;
-const CHRISTMAS_TREE_WIDTH: usize = 31;
-const CHRISTMAS_TREE_HEIGHT: usize = 33;
-const CHRISTMAS_TREE: [[u8; CHRISTMAS_TREE_WIDTH]; CHRISTMAS_TREE_HEIGHT] = [
+const CHRISTMAS_TREE_WIDTH: usize = CHRISTMAS_TREE[0].len();
+const CHRISTMAS_TREE_HEIGHT: usize = CHRISTMAS_TREE.len();
+const CHRISTMAS_TREE: [[u8; 31]; 33] = [
     *b"*******************************",
     *b"*                             *",
     *b"*                             *",
