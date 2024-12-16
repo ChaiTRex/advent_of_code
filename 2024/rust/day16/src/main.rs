@@ -18,6 +18,8 @@ fn main() {
     };
     static HEIGHT: usize = (INPUT.len() + LINE_WIDTH - WIDTH) / LINE_WIDTH;
 
+    let bench_start = std::time::Instant::now();
+
     #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
     enum Direction {
         North,
@@ -101,7 +103,6 @@ fn main() {
         .flatten()
         .min()
         .unwrap();
-    println!("{part1}");
 
     fn g(
         i: usize,
@@ -232,6 +233,10 @@ fn main() {
         &mut good_spots,
     );
 
+    let part2 = good_spots.len();
+
+    let time = bench_start.elapsed();
+
     let mut i = 0;
     for _ in 0..HEIGHT {
         for _ in 0..WIDTH {
@@ -246,6 +251,5 @@ fn main() {
         i += LINE_WIDTH - WIDTH;
     }
 
-    let part2 = good_spots.len();
-    println!("{part2}");
+    println!("Part 1: {part1}\nPart 2: {part2}\nTime taken: {time:?}",);
 }
