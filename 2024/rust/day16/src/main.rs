@@ -1,4 +1,5 @@
 use std::collections::HashSet;
+use std::sync::atomic::{AtomicU64, Ordering};
 
 fn main() {
     static INPUT: &[u8] = include_bytes!("../../../day16.txt");
@@ -18,6 +19,8 @@ fn main() {
     };
     static HEIGHT: usize = (INPUT.len() + LINE_WIDTH - WIDTH) / LINE_WIDTH;
 
+    static LOWEST_SCORE_SO_FAR: AtomicU64 = AtomicU64::new(u64::MAX);
+
     let bench_start = std::time::Instant::now();
 
     #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
@@ -29,7 +32,7 @@ fn main() {
     }
 
     fn f(i: usize, direction: Direction, score_so_far: u64, least_scores: &mut [Option<u64>]) {
-        if INPUT[i] == b'#' {
+        if INPUT[i] == b'#' || score_so_far > LOWEST_SCORE_SO_FAR.load(Ordering::Relaxed) {
             return;
         }
         if least_scores[(i << 2) | direction as usize]
@@ -42,7 +45,10 @@ fn main() {
         least_scores[(i << 2) | direction as usize] = Some(score_so_far);
 
         match INPUT[i] {
-            b'#' | b'E' => (),
+            b'#' => panic!("'#' is already handled above"),
+            b'E' => {
+                LOWEST_SCORE_SO_FAR.fetch_min(score_so_far, Ordering::Relaxed);
+            }
             b'.' | b'S' => match direction {
                 Direction::North => {
                     f(i - LINE_WIDTH, direction, score_so_far + 1, least_scores);
@@ -111,7 +117,10 @@ fn main() {
         least_scores: &[Option<u64>],
         good_spots: &mut HashSet<usize>,
     ) -> bool {
-        if INPUT[i] == b'#' || score_so_far != least_scores[(i << 2) | direction as usize].unwrap()
+        if INPUT[i] == b'#'
+            || least_scores[(i << 2) | direction as usize]
+                .map(|least_score| score_so_far != least_score)
+                .unwrap_or(true)
         {
             // println!("Reached ({}, {})", i % LINE_WIDTH, i / LINE_WIDTH);
             return false;
