@@ -60,19 +60,26 @@ fn main() {
     // SAFETY: `part1` is filled with ASCII characters, so it's UTF-8 compliant.
     let part1 = unsafe { String::from_utf8_unchecked(part1) };
 
-    let mut part2_candidates = vec![0];
-    for i in (0..machine_code.len()).rev() {
-        let target = &machine_code[i..];
-        part2_candidates = part2_candidates
-            .into_iter()
-            .flat_map(|candidate| (0..8).map(move |n| 8 * candidate + n))
-            .filter(|&candidate| execute(&instructions, candidate, 0, 0) == target)
-            .collect::<Vec<_>>();
-    }
-    let part2 = part2_candidates[0];
+    let part2 = f(&machine_code, &instructions, machine_code.len() - 1, 0).unwrap();
 
     let time = start.elapsed();
     println!("Part 1: {part1}\nPart 2: {part2}\nTime taken: {time:?}",);
+}
+
+pub fn f(machine_code: &[u8], instructions: &[Instruction], i: usize, mut n: u64) -> Option<u64> {
+    let target = &machine_code[i..];
+    n *= 8;
+    for n in n..n + 8 {
+        if &execute(instructions, n, 0, 0) == target {
+            if i == 0 {
+                return Some(n);
+            }
+            if let Some(n) = f(machine_code, instructions, i - 1, n) {
+                return Some(n);
+            }
+        }
+    }
+    None
 }
 
 pub fn execute(instructions: &[Instruction], mut a: u64, mut b: u64, mut c: u64) -> Vec<u8> {
