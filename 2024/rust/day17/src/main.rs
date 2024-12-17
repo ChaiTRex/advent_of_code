@@ -3,6 +3,8 @@ use core::fmt::Write;
 fn main() {
     static INPUT: &str = include_str!("../../../day17.txt");
 
+    let start = std::time::Instant::now();
+
     let (registers, instructions) = INPUT.split_once("\n\n").unwrap();
     let registers = registers
         .lines()
@@ -27,14 +29,6 @@ fn main() {
         }
     }
 
-    println!(
-        "Instructions: {:?}",
-        instructions
-            .iter()
-            .map(|instruction| to_asm(instruction.0, instruction.1))
-            .collect::<Vec<_>>()
-    );
-
     let outputs = execute(&instructions, registers);
 
     let mut part1 = String::new();
@@ -43,7 +37,6 @@ fn main() {
         write!(part1, ",").unwrap();
         write!(part1, "{output}").unwrap();
     }
-    println!("{part1}");
 
     let mut part2_candidates = vec![0];
     for i in (0..original_machine_code.len()).rev() {
@@ -54,8 +47,10 @@ fn main() {
             .filter(|&candidate| execute(&instructions, [candidate, 0, 0]) == target)
             .collect::<Vec<_>>();
     }
-    println!("{part2_candidates:?}");
-    println!("{}", part2_candidates.iter().min().unwrap());
+    let part2 = part2_candidates.iter().min().unwrap();
+
+    let time = start.elapsed();
+    println!("Part 1: {part1}\nPart 2: {part2}\nTime taken: {time:?}",);
 }
 
 fn execute(instructions: &[(Opcode, u8)], mut registers: [i64; 3]) -> Vec<u8> {
