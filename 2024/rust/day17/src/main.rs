@@ -70,7 +70,7 @@ pub fn f(machine_code: &[u8], instructions: &[Instruction], i: usize, mut n: u64
     let target = &machine_code[i..];
     n *= 8;
     for n in n..n + 8 {
-        if &execute(instructions, n, 0, 0) == target {
+        if execute(instructions, n, 0, 0) == target {
             if i == 0 {
                 return Some(n);
             }
@@ -166,6 +166,7 @@ pub fn execute(instructions: &[Instruction], mut a: u64, mut b: u64, mut c: u64)
 
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 #[repr(u8)]
+#[allow(clippy::eq_op, clippy::identity_op)]
 pub enum Instruction {
     Adv0 = (0 << 3) | 0,
     Adv1 = (0 << 3) | 1,
@@ -230,8 +231,8 @@ impl Instruction {
         } else if (opcode | 2) != 3 && operand == 7 {
             Err(InvalidInstruction(opcode, operand))
         } else {
-            // Safety: all invalid inputs have been handled above.
-            Ok(unsafe { core::mem::transmute((opcode << 3) | operand) })
+            // SAFETY: all invalid inputs have been handled above.
+            Ok(unsafe { core::mem::transmute::<u8, Instruction>((opcode << 3) | operand) })
         }
     }
 
@@ -248,8 +249,8 @@ impl Instruction {
         } else if (opcode | 2) != 3 && operand == 7 {
             Err(InvalidInstructionFromAscii(opcode, operand))
         } else {
-            // Safety: all invalid inputs have been handled above.
-            Ok(unsafe { core::mem::transmute((opcode << 3) | operand) })
+            // SAFETY: all invalid inputs have been handled above.
+            Ok(unsafe { core::mem::transmute::<u8, Instruction>((opcode << 3) | operand) })
         }
     }
 
