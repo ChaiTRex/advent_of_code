@@ -18,7 +18,8 @@ fn main() {
         unusable[y as usize][x as usize] = true;
     }
     let mut best = [[usize::MAX; 71]; 71];
-    let part1 = f(0, (0, 0), &mut best, &unusable).unwrap();
+    let mut global_minimum = usize::MAX;
+    let part1 = f(0, (0, 0), &mut global_minimum, &mut best, &unusable).unwrap();
 
     let mut part2 = String::from("ERROR");
     for (x, y) in drops[1024..].iter().copied() {
@@ -37,25 +38,27 @@ fn main() {
 fn f(
     mut steps: usize,
     (x, y): (usize, usize),
+    global_minimum: &mut usize,
     best: &mut [[usize; 71]; 71],
     unusable: &[[bool; 71]; 71],
 ) -> Option<usize> {
     if unusable[y][x] {
         return None;
     }
-    if steps >= best[y][x] {
+    if steps >= best[y][x] || steps > *global_minimum {
         return None;
     }
     best[y][x] = steps;
     if (x, y) == (70, 70) {
+        *global_minimum = steps.min(*global_minimum);
         return Some(steps);
     }
     steps += 1;
     [
-        (y > 0).then(|| f(steps, (x, y - 1), best, unusable)),
-        (x < 70).then(|| f(steps, (x + 1, y), best, unusable)),
-        (y < 70).then(|| f(steps, (x, y + 1), best, unusable)),
-        (x > 0).then(|| f(steps, (x - 1, y), best, unusable)),
+        (y > 0).then(|| f(steps, (x, y - 1), global_minimum, best, unusable)),
+        (x < 70).then(|| f(steps, (x + 1, y), global_minimum, best, unusable)),
+        (y < 70).then(|| f(steps, (x, y + 1), global_minimum, best, unusable)),
+        (x > 0).then(|| f(steps, (x - 1, y), global_minimum, best, unusable)),
     ]
     .into_iter()
     .flatten()
