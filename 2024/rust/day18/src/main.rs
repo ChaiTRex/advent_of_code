@@ -23,8 +23,8 @@ fn main() {
     let mut part2 = String::from("ERROR");
     for (x, y) in drops[1024..].iter().copied() {
         unusable[y as usize][x as usize] = true;
-        let mut best = [[usize::MAX; 71]; 71];
-        if f(0, (0, 0), &mut best, &unusable).is_none() {
+        let mut visited_or_unusable = unusable;
+        if !g((0, 0), &mut visited_or_unusable) {
             part2 = format!("{x},{y}");
             break;
         }
@@ -40,12 +40,6 @@ fn f(
     best: &mut [[usize; 71]; 71],
     unusable: &[[bool; 71]; 71],
 ) -> Option<usize> {
-    /*println!(
-        "steps: {} at ({x}, {y}) with best {} and unusability is {}",
-        steps + 1,
-        best[y][x],
-        unusable[y][x]
-    );*/
     if unusable[y][x] {
         return None;
     }
@@ -67,4 +61,20 @@ fn f(
     .flatten()
     .flatten()
     .min()
+}
+
+fn g((x, y): (usize, usize), visited_or_unusable: &mut [[bool; 71]; 71]) -> bool {
+    if visited_or_unusable[y][x] {
+        return false;
+    }
+    visited_or_unusable[y][x] = true;
+    if (x, y) == (70, 70) {
+        return true;
+    }
+
+    (x, y) == (70, 70)
+        || (x < 70 && g((x + 1, y), visited_or_unusable))
+        || (y < 70 && g((x, y + 1), visited_or_unusable))
+        || (y > 0 && g((x, y - 1), visited_or_unusable))
+        || (x > 0 && g((x - 1, y), visited_or_unusable))
 }
