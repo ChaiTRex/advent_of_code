@@ -40,11 +40,11 @@ fn main() {
     for (x, y) in drops.iter().copied().take(1024) {
         unusable[y as usize][x as usize] = true;
     }
-    let mut best = [[usize::MAX; 71]; 71];
-    let mut global_minimum = usize::MAX;
+    let mut best = [[u16::MAX; 71]; 71];
+    let mut global_minimum = u16::MAX;
     let part1 = f(0, (0, 0), &mut global_minimum, &mut best, &unusable).unwrap();
 
-    let mut part2 = String::from("ERROR");
+    let mut part2 = String::new();
     for (x, y) in drops[1024..].iter().copied() {
         unusable[y as usize][x as usize] = true;
         let mut visited_or_unusable = unusable;
@@ -59,19 +59,19 @@ fn main() {
 }
 
 fn f(
-    mut steps: usize,
-    (x, y): (usize, usize),
-    global_minimum: &mut usize,
-    best: &mut [[usize; 71]; 71],
+    mut steps: u16,
+    (x, y): (u8, u8),
+    global_minimum: &mut u16,
+    best: &mut [[u16; 71]; 71],
     unusable: &[[bool; 71]; 71],
-) -> Option<usize> {
-    if unusable[y][x] {
+) -> Option<u16> {
+    if unusable[y as usize][x as usize] {
         return None;
     }
-    if steps >= best[y][x] || steps > *global_minimum {
+    if steps >= best[y as usize][x as usize] || steps > *global_minimum {
         return None;
     }
-    best[y][x] = steps;
+    best[y as usize][x as usize] = steps;
     if (x, y) == (70, 70) {
         *global_minimum = steps.min(*global_minimum);
         return Some(steps);
