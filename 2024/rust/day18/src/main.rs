@@ -1,17 +1,40 @@
 fn main() {
-    static INPUT: &str = include_str!("../../../day18.txt");
+    static INPUT: &[u8] = include_bytes!("../../../day18.txt");
+    const LINEBREAK_WIDTH: usize = {
+        let mut i = 0;
+        while INPUT[i].is_ascii_graphic() {
+            i += 1;
+        }
+        let start = i;
+        while !INPUT[i].is_ascii_graphic() {
+            i += 1;
+        }
+        i - start
+    };
 
     let start = std::time::Instant::now();
 
-    let drops = INPUT
-        .lines()
-        .map(|line| {
-            let (x, y) = line.split_once(',').unwrap();
-            let x = x.parse::<u8>().unwrap();
-            let y = y.parse::<u8>().unwrap();
-            (x, y)
-        })
-        .collect::<Vec<_>>();
+    let mut drops = Vec::with_capacity(3450);
+    let mut i = 0;
+    while i + 1 < INPUT.len() {
+        let x;
+        if INPUT[i + 1].is_ascii_digit() {
+            x = 10 * (INPUT[i] - b'0') + INPUT[i + 1] - b'0';
+            i += 3;
+        } else {
+            x = INPUT[i] - b'0';
+            i += 2;
+        }
+        let y;
+        if INPUT[i + 1].is_ascii_digit() {
+            y = 10 * (INPUT[i] - b'0') + INPUT[i + 1] - b'0';
+            i += 2 + LINEBREAK_WIDTH;
+        } else {
+            y = INPUT[i] - b'0';
+            i += 1 + LINEBREAK_WIDTH;
+        }
+        drops.push((x, y));
+    }
 
     let mut unusable = [[false; 71]; 71];
     for (x, y) in drops.iter().copied().take(1024) {
@@ -71,9 +94,6 @@ fn g((x, y): (usize, usize), visited_or_unusable: &mut [[bool; 71]; 71]) -> bool
         return false;
     }
     visited_or_unusable[y][x] = true;
-    if (x, y) == (70, 70) {
-        return true;
-    }
 
     (x, y) == (70, 70)
         || (x < 70 && g((x + 1, y), visited_or_unusable))
