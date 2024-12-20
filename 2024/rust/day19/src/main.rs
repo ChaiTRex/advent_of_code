@@ -4,6 +4,8 @@ use wordbreaker::Dictionary;
 fn main() {
     static INPUT: &str = include_str!("../../../day19.txt");
 
+    let start = std::time::Instant::now();
+
     let dictionary = INPUT
         .lines()
         .next()
@@ -11,13 +13,13 @@ fn main() {
         .split(", ")
         .collect::<Dictionary<_>>();
 
-    let successes = INPUT
+    let part1 = INPUT
         .lines()
         .skip(2)
         .filter(|&target| dictionary.concatenations_for(target).next().is_some())
         .count();
 
-    println!("{successes}");
+    println!("{part1}");
 
     let mut words = INPUT
         .lines()
@@ -27,14 +29,15 @@ fn main() {
         .collect::<Vec<_>>();
     words.sort_unstable();
 
-    let successes = INPUT
+    let part2 = INPUT
         .lines()
         .skip(2)
         .inspect(|line| println!("{line}"))
         .map(|target| f(&mut HashMap::new(), 0, target, &words))
         .sum::<usize>();
 
-    println!("{successes}");
+    let time = start.elapsed();
+    println!("Part 1: {part1}\nPart 2: {part2}\nTime taken: {time:?}",);
 }
 
 fn f(memoizer: &mut HashMap<usize, usize>, i: usize, word: &str, dictionary: &[&str]) -> usize {
