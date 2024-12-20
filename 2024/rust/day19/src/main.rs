@@ -1,55 +1,41 @@
 use std::collections::HashMap;
-use wordbreaker::Dictionary;
 
 fn main() {
     static INPUT: &str = include_str!("../../../day19.txt");
 
     let start = std::time::Instant::now();
 
-    let dictionary = INPUT
-        .lines()
-        .next()
-        .unwrap()
-        .split(", ")
-        .collect::<Dictionary<_>>();
-
-    let part1 = INPUT
-        .lines()
-        .skip(2)
-        .filter(|&target| dictionary.concatenations_for(target).next().is_some())
-        .count();
-
-    println!("{part1}");
-
-    let mut words = INPUT
+    let towels = INPUT
         .lines()
         .next()
         .unwrap()
         .split(", ")
         .collect::<Vec<_>>();
-    words.sort_unstable();
 
-    let part2 = INPUT
-        .lines()
-        .skip(2)
-        .inspect(|line| println!("{line}"))
-        .map(|target| f(&mut HashMap::new(), 0, target, &words))
-        .sum::<usize>();
+    let mut part1 = 0;
+    let mut part2 = 0;
+    for design in INPUT.lines().skip(2) {
+        let mut memoizer = HashMap::new();
+        memoizer.insert(design.len(), 1);
+        let different_ways = f(&mut memoizer, 0, design, &towels);
+        if different_ways != 0 {
+            part1 += 1;
+            part2 += different_ways;
+        }
+    }
 
     let time = start.elapsed();
     println!("Part 1: {part1}\nPart 2: {part2}\nTime taken: {time:?}",);
 }
 
-fn f(memoizer: &mut HashMap<usize, usize>, i: usize, word: &str, dictionary: &[&str]) -> usize {
-    if i == word.len() {
-        1
-    } else if memoizer.contains_key(&i) {
+fn f(memoizer: &mut HashMap<usize, usize>, i: usize, design: &str, towels: &[&str]) -> usize {
+    if memoizer.contains_key(&i) {
         *memoizer.get(&i).unwrap()
     } else {
-        let count = dictionary
+        let count = towels
             .into_iter()
-            .filter(|&dict_word| word[i..].starts_with(dict_word))
-            .map(|dict_word| f(memoizer, i + dict_word.len(), word, dictionary))
+            .filter(|&towel| design[i..].starts_with(towel))
+            .map(|towel| f(memoizer, i + towel.len(), design, towels))
             .sum::<usize>();
         memoizer.insert(i, count);
         count
