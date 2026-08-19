@@ -5,11 +5,11 @@
 fn main() {
     let input = include_bytes!("../../../day01.txt");
 
-    let mut pos = 50;
-    let mut last_direction = b'L';
-    let mut part_1: u32 = 0;
+    let mut part_1 = 0_u32;
     let mut part_2 = 0;
 
+    let mut pos = 50;
+    let mut last_direction = b'L';
     let mut i = 0;
     while i < input.len() {
         if input[i] != last_direction {
@@ -21,14 +21,19 @@ fn main() {
         i += 1;
     
         let mut movement = 0;
-        while i < input.len() && input[i].wrapping_sub(b'0') <= 9 {
+        while i < input.len() {
+            let digit = input[i].wrapping_sub(b'0');
+            if digit > 9 {
+                break;
+            }
             movement *= 10;
-            movement += (input[i] - b'0') as u32;
+            movement += digit as u32;
             i += 1;
         }
         pos += movement;
-        part_2 += pos / 100;
-        pos %= 100;
+        let zero_crossings = pos / 100;
+        part_2 += zero_crossings;
+        pos -= 100 * zero_crossings;
         if pos == 0 {
             part_1 += 1;
         }
@@ -41,3 +46,4 @@ fn main() {
     println!("Part 1: {part_1}");
     println!("Part 2: {part_2}");
 }
+
