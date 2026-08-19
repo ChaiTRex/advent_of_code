@@ -1,17 +1,19 @@
 // Improved with the assistance of Godbolt.org and Gemini 3.1 Pro.
+// Simplified direction change handling, inspired by /u/Turilas at
+//     https://www.reddit.com/r/adventofcode/comments/1pb3y8p/_/nrrk1qf/.
 
 fn main() {
     let input = include_bytes!("../../../day01.txt");
 
     let mut pos = 50;
-    let mut leftward_goes_up = false;
+    let mut last_direction = b'L';
     let mut part_1: u32 = 0;
     let mut part_2 = 0;
 
     let mut i = 0;
     while i < input.len() {
-        if (input[i] == b'L') ^ leftward_goes_up {
-            leftward_goes_up = !leftward_goes_up;
+        if input[i] != last_direction {
+            last_direction = input[i];
             if pos != 0 {
                 pos = 100 - pos;
             }
